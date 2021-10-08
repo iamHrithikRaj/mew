@@ -1,6 +1,6 @@
 package com.hrithikraj.mew;
 
-public class Interpreter {
+public class Interpreter implements Expr.Visitor<Object>{
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
@@ -22,18 +22,18 @@ public class Interpreter {
         return null;
     }
 
+
     private void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double)
             return;
         throw new RuntimeError(operator, "Operand must be a number.");
     }
-
     
-
-    private void checkNumberOperand(Token operator, Object operand) {
-        if (operand instanceof Double)
+    private void checkNumberOperands(Token operator, Object left, Object right) {
+        if (left instanceof Double && right instanceof Double)
             return;
-        throw new RuntimeError(operator, "Operand must be a number.");
+
+        throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
     private boolean isTruthy(Object object) {
@@ -117,7 +117,7 @@ public class Interpreter {
             Object value = evaluate(expression);
             System.out.println(stringify(value));
         } catch (RuntimeError error) {
-            Lox.runtimeError(error);
+            Mew.runtimeError(error);
         }
     }
 

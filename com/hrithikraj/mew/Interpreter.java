@@ -1,17 +1,39 @@
 package com.hrithikraj.mew;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import com.hrithikraj.mew.Expr.Assign;
+import com.hrithikraj.mew.Stmt.Function;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private Environment environment = new Environment();
+    final Environment globals = new Environment();
+    private Environment environment = globals;
+
+    Interpreter() {
+        globals.define("clock", new MewCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn>";
+            }
+        });
+    }
 
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
     }
-    
+
     @Override
     public Object visitLogicalExpr(Expr.Logical expr) {
         Object left = evaluate(expr.left);
@@ -112,6 +134,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        MewFunction function = new MewFunction(stmt, environment);
+        environment.define(stmt.name.lexeme, function);
+        return null;
+    }
+
+    @Override
     public Void visitIfStmt(Stmt.If stmt) {
         if (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
@@ -129,6 +158,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null)
+            value = evaluate(stmt.value);
+
+        throw new Return(value);
+    } 
+
+    @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
         if (stmt.initializer != null) {
@@ -136,6 +174,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
         return null;
     }
 
@@ -194,6 +240,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         // Unreachable.
         return null;
+    }
+
+    @Override
+    public Object visitCallExpr(Expr.Call expr) {
+        Object callee = evaluate(expr.callee);
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments) {
+            arguments.add(evaluate(argument));
+        }
+
+        if (!(callee instanceof MewCallable)) {
+            throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+        }
+
+        MewCallable function = (MewCallable) callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren,
+                    "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
+        }
+
+        return function.call(this, arguments);
     }
 
     @Override

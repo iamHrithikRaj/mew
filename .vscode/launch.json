@@ -23,7 +23,7 @@
             "request": "launch",
             "mainClass": "com.hrithikraj.mew.Mew",
             "projectName": "Flask-REST-API_70d2dc86",
-            "args": "/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script.txt",
+            "args": "/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script4.txt",
         },
         {
             "type": "java",

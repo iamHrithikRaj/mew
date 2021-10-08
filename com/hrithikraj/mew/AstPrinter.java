@@ -1,6 +1,7 @@
 package com.hrithikraj.mew;
 
 import com.hrithikraj.mew.Expr.Assign;
+import com.hrithikraj.mew.Expr.Call;
 import com.hrithikraj.mew.Expr.Logical;
 import com.hrithikraj.mew.Expr.Variable;
 
@@ -66,6 +67,12 @@ class AstPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitLogicalExpr(Logical expr) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String visitCallExpr(Call expr) {
         // TODO Auto-generated method stub
         return null;
     }

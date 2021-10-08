@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch AstPrinter",
+            "request": "launch",
+            "mainClass": "com.hrithikraj.mew.AstPrinter",
+            "projectName": "Flask-REST-API_70d2dc86"
+        },
+        {
+            "type": "java",
+            "name": "Launch Mew",
+            "request": "launch",
+            "mainClass": "com.hrithikraj.mew.Mew",
+            "projectName": "Flask-REST-API_70d2dc86",
+            "args": "/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script.txt",
+        },
+        {
+            "type": "java",
+            "name": "Launch GenerateAst",
+            "request": "launch",
+            "mainClass": "com.hrithikraj.tool.GenerateAst",
+            "projectName": "Flask-REST-API_70d2dc86"
+        }
+    ]
+}

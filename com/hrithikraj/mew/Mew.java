@@ -11,6 +11,8 @@ import java.util.List;
 
 public class Mew {
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
+    private static final Interpreter interpreter = new Interpreter();
 
     static void error(int line, String message) {
         report(line, "", message);
@@ -29,6 +31,11 @@ public class Mew {
         }
     }
 
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
+    }
+
     private static void run(String source) {
         if (hadError)
             System.exit(65);
@@ -42,6 +49,7 @@ public class Mew {
         if (hadError)
             return;
 
+        interpreter.interpret(expression);
         System.out.println(new AstPrinter().print(expression));
     }
 
@@ -62,6 +70,11 @@ public class Mew {
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
+
+        if (hadError)
+            System.exit(65);
+        if (hadRuntimeError)
+            System.exit(70);
     }
 
     public static void main(String[] args) throws IOException {

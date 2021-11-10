@@ -15,22 +15,22 @@
             "name": "Launch AstPrinter",
             "request": "launch",
             "mainClass": "com.hrithikraj.mew.AstPrinter",
-            "projectName": "Flask-REST-API_70d2dc86"
+            "projectName": "mew_e13cc774"
         },
         {
             "type": "java",
             "name": "Launch Mew",
             "request": "launch",
             "mainClass": "com.hrithikraj.mew.Mew",
-            "projectName": "Flask-REST-API_70d2dc86",
-            "args": "/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script4.txt",
+            "projectName": "mew_e13cc774",
+            "args": "/Users/hrithikraj/Documents/Projects/mew/com/hrithikraj/mew/script1.txt"
         },
         {
             "type": "java",
             "name": "Launch GenerateAst",
             "request": "launch",
             "mainClass": "com.hrithikraj.tool.GenerateAst",
-            "projectName": "Flask-REST-API_70d2dc86"
+            "projectName": "mew_e13cc774"
         }
     ]
 }

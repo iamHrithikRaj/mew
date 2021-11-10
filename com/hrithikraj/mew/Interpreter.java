@@ -68,6 +68,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitSuperExpr(Expr.Super expr) {
+        int distance = locals.get(expr);
+        MewClass superclass = (MewClass) environment.getAt(distance, "super");
+        MewInstance object = (MewInstance) environment.getAt(distance - 1, "this");
+        MewFunction method = superclass.findMethod(expr.method.lexeme);
+        if (method == null) {
+            throw new RuntimeError(expr.method, "Undefined property '" + expr.method.lexeme + "'.");
+        }
+        return method.bind(object);
+    }
+
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
 
@@ -160,16 +172,35 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
+        Object superclass = null;
+        if (stmt.superclass != null) {
+            superclass = evaluate(stmt.superclass);
+            if (!(superclass instanceof MewClass)) {
+                throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.");
+            }
+        }
+
+        // MewClass klass = new MewClass(stmt.name.lexeme, (MewClass) superclass,
+        // methods);
+
         environment.define(stmt.name.lexeme, null);
+
+        if (stmt.superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
 
         Map<String, MewFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
-            MewFunction function = new MewFunction(method, environment,
-            method.name.lexeme.equals("init"));
-          methods.put(method.name.lexeme, function);
+            MewFunction function = new MewFunction(method, environment, method.name.lexeme.equals("init"));
+            methods.put(method.name.lexeme, function);
         }
-    
-        MewClass klass = new MewClass(stmt.name.lexeme, methods);
+
+        MewClass klass = new MewClass(stmt.name.lexeme, (MewClass) superclass, methods);
+
+        if (superclass != null) {
+            environment = environment.enclosing;
+        }
         environment.assign(stmt.name, klass);
         return null;
     }
@@ -182,8 +213,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        MewFunction function = new MewFunction(stmt, environment,
-                                           false);
+        MewFunction function = new MewFunction(stmt, environment, false);
         environment.define(stmt.name.lexeme, function);
         return null;
     }

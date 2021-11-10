@@ -90,8 +90,8 @@ public class Mew {
             System.out.println("Usage: mew [script]");
             System.exit(64);
         } else if (args.length == 1) {
-            // runFile(args[0]);
-            runFile("/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script3.txt");
+            runFile(args[0]);
+            // runFile("/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script3.txt");
         } else {
             runPrompt();
         }

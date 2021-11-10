@@ -6,8 +6,10 @@ import java.util.Map;
 class MewClass implements MewCallable {
     final String name;
     private final Map<String, MewFunction> methods;
+    final MewClass superclass;
 
-    MewClass(String name, Map<String, MewFunction> methods) {
+    MewClass(String name, MewClass superclass, Map<String, MewFunction> methods) {
+        this.superclass = superclass;
         this.name = name;
         this.methods = methods;
     }
@@ -16,6 +18,11 @@ class MewClass implements MewCallable {
         if (methods.containsKey(name)) {
             return methods.get(name);
         }
+
+        if (superclass != null) {
+            return superclass.findMethod(name);
+        }
+        
 
         return null;
     }

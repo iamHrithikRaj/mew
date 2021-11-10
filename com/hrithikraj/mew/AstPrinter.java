@@ -5,6 +5,7 @@ import com.hrithikraj.mew.Expr.Call;
 import com.hrithikraj.mew.Expr.Get;
 import com.hrithikraj.mew.Expr.Logical;
 import com.hrithikraj.mew.Expr.Set;
+import com.hrithikraj.mew.Expr.Super;
 import com.hrithikraj.mew.Expr.This;
 import com.hrithikraj.mew.Expr.Variable;
 
@@ -94,6 +95,12 @@ class AstPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitThisExpr(This expr) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String visitSuperExpr(Super expr) {
         // TODO Auto-generated method stub
         return null;
     }

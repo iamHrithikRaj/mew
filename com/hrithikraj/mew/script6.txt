@@ -1,0 +1,7 @@
+class MyClass {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print MyClass; // Prints "DevonshireCream".

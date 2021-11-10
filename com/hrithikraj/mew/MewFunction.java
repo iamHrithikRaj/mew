@@ -5,10 +5,18 @@ import java.util.List;
 class MewFunction implements MewCallable {
     private final Stmt.Function declaration;
     private final Environment closure;
+    private final boolean isInitializer;
 
-    MewFunction(Stmt.Function declaration, Environment closure) {
+    MewFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
+        this.isInitializer = isInitializer;
         this.closure = closure;
         this.declaration = declaration;
+    }
+
+    MewFunction bind(MewInstance instance) {
+        Environment environment = new Environment(closure);
+        environment.define("this", instance);
+        return new MewFunction(declaration, environment, isInitializer);
     }
 
     @Override
@@ -22,8 +30,12 @@ class MewFunction implements MewCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
+            if (isInitializer)
+                return closure.getAt(0, "this");
             return returnValue.value;
         }
+        if (isInitializer)
+            return closure.getAt(0, "this");
         return null;
     }
 

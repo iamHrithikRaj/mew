@@ -49,6 +49,13 @@ public class Mew {
         if (hadError)
             return;
 
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (hadError)
+            return;
+
         interpreter.interpret(statements);
     }
 
@@ -68,7 +75,6 @@ public class Mew {
 
     private static void runFile(String path) throws IOException {
 
-
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
@@ -84,8 +90,8 @@ public class Mew {
             System.out.println("Usage: mew [script]");
             System.exit(64);
         } else if (args.length == 1) {
-            runFile(args[0]);
-            // runFile("script.txt");
+            // runFile(args[0]);
+            runFile("/Users/hrithikraj/Documents/Projects/Flask-REST-API/com/hrithikraj/mew/script3.txt");
         } else {
             runPrompt();
         }

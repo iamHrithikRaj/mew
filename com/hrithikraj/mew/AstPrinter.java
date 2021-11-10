@@ -2,7 +2,10 @@ package com.hrithikraj.mew;
 
 import com.hrithikraj.mew.Expr.Assign;
 import com.hrithikraj.mew.Expr.Call;
+import com.hrithikraj.mew.Expr.Get;
 import com.hrithikraj.mew.Expr.Logical;
+import com.hrithikraj.mew.Expr.Set;
+import com.hrithikraj.mew.Expr.This;
 import com.hrithikraj.mew.Expr.Variable;
 
 class AstPrinter implements Expr.Visitor<String> {
@@ -73,6 +76,24 @@ class AstPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitCallExpr(Call expr) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String visitGetExpr(Get expr) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String visitSetExpr(Set expr) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String visitThisExpr(This expr) {
         // TODO Auto-generated method stub
         return null;
     }

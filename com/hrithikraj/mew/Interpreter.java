@@ -2,13 +2,18 @@ package com.hrithikraj.mew;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.hrithikraj.mew.Expr.Assign;
+import com.hrithikraj.mew.Expr.Get;
+import com.hrithikraj.mew.Expr.This;
 import com.hrithikraj.mew.Stmt.Function;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = globals;
+    private final Map<Expr, Integer> locals = new HashMap<>();
 
     Interpreter() {
         globals.define("clock", new MewCallable() {
@@ -50,15 +55,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitSetExpr(Expr.Set expr) {
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof MewInstance)) {
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        Object value = evaluate(expr.value);
+        ((MewInstance) object).set(expr.name, value);
+        return value;
+    }
+
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
-            case BANG:
-                return !isTruthy(right);
-            case MINUS:
-                checkNumberOperand(expr.operator, right);
-                return -(double) right;
+        case BANG:
+            return !isTruthy(right);
+        case MINUS:
+            checkNumberOperand(expr.operator, right);
+            return -(double) right;
         }
 
         // Unreachable.
@@ -67,7 +85,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
-        return environment.get(expr.name);
+        return lookUpVariable(expr.name, expr);
+    }
+
+    private Object lookUpVariable(Token name, Expr expr) {
+        Integer distance = locals.get(expr);
+        if (distance != null) {
+            return environment.getAt(distance, name.lexeme);
+        } else {
+            return globals.get(name);
+        }
     }
 
     private void checkNumberOperand(Token operator, Object operand) {
@@ -108,6 +135,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         stmt.accept(this);
     }
 
+    void resolve(Expr expr, int depth) {
+        locals.put(expr, depth);
+    }
+
     void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
@@ -128,6 +159,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        environment.define(stmt.name.lexeme, null);
+
+        Map<String, MewFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            MewFunction function = new MewFunction(method, environment,
+            method.name.lexeme.equals("init"));
+          methods.put(method.name.lexeme, function);
+        }
+    
+        MewClass klass = new MewClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, klass);
+        return null;
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
@@ -135,7 +182,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        MewFunction function = new MewFunction(stmt, environment);
+        MewFunction function = new MewFunction(stmt, environment,
+                                           false);
         environment.define(stmt.name.lexeme, function);
         return null;
     }
@@ -164,7 +212,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             value = evaluate(stmt.value);
 
         throw new Return(value);
-    } 
+    }
 
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
@@ -188,7 +236,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
-        environment.assign(expr.name, value);
+        Integer distance = locals.get(expr);
+        if (distance != null) {
+            environment.assignAt(distance, expr.name, value);
+        } else {
+            globals.assign(expr.name, value);
+        }
         return value;
     }
 
@@ -198,44 +251,44 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
-            case GREATER:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left > (double) right;
-            case GREATER_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left >= (double) right;
-            case LESS:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left < (double) right;
-            case LESS_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left <= (double) right;
-            case MINUS:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left - (double) right;
-            case PLUS:
-                checkNumberOperands(expr.operator, left, right);
-                if (left instanceof Double && right instanceof Double) {
-                    return (double) left + (double) right;
-                }
+        case GREATER:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left > (double) right;
+        case GREATER_EQUAL:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left >= (double) right;
+        case LESS:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left < (double) right;
+        case LESS_EQUAL:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left <= (double) right;
+        case MINUS:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left - (double) right;
+        case PLUS:
+            checkNumberOperands(expr.operator, left, right);
+            if (left instanceof Double && right instanceof Double) {
+                return (double) left + (double) right;
+            }
 
-                if (left instanceof String && right instanceof String) {
-                    return (String) left + (String) right;
-                }
+            if (left instanceof String && right instanceof String) {
+                return (String) left + (String) right;
+            }
 
-                throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
-            case SLASH:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left / (double) right;
-            case STAR:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left * (double) right;
-            case BANG_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return !isEqual(left, right);
-            case EQUAL_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return isEqual(left, right);
+            throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
+        case SLASH:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left / (double) right;
+        case STAR:
+            checkNumberOperands(expr.operator, left, right);
+            return (double) left * (double) right;
+        case BANG_EQUAL:
+            checkNumberOperands(expr.operator, left, right);
+            return !isEqual(left, right);
+        case EQUAL_EQUAL:
+            checkNumberOperands(expr.operator, left, right);
+            return isEqual(left, right);
         }
 
         // Unreachable.
@@ -292,6 +345,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         return object.toString();
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof MewInstance) {
+            return ((MewInstance) object).get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitThisExpr(This expr) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
